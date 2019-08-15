@@ -12,4 +12,9 @@ public final class MathsHelper {
 		int i = (int) n;
 		return n < (double) i ? i - 1 : i;
 	}
+	
+	public static double ceil(double n) {
+		int i = (int) n;
+		return n > (double) i ? i + 1 : i;
+	}
 }

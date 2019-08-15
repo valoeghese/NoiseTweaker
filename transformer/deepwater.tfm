@@ -1,0 +1,9 @@
+out r
+out g
+out b
+
+start
+# water colours
+set r 0.05
+set g 0.0
+set b 0.5

@@ -16,6 +16,7 @@ import tk.valoeghese.noisetweaker.module.Transformer;
 import tk.valoeghese.noisetweaker.noise.OctaveOpenSimplexNoise;
 import tk.valoeghese.noisetweaker.noise.OctaveSimpleGradientNoise;
 import tk.valoeghese.noisetweaker.noise.OctaveValueNoise;
+import tk.valoeghese.noisetweaker.util.MathsHelper;
 
 public class NoiseTransformParser {
 
@@ -45,10 +46,11 @@ public class NoiseTransformParser {
 
 			byte readMode = 0; // 0 = head, 1 = main, 2 = in, 3 = out, 4 = load, 
 			// 5 = VarName, 6 = VarValue, 7 = prepare, 8 = gennoise
-			// 9 = loadif
+			// 9 = loadif, 10 = noparam varmanip (npvm)
 			byte readMeta = 0; // var manipulation: 0 = set, 1 = add, 2 = sub, 3 = mul, 4 = div
 			// noise: 0 = value, 1 = simplegradient, 2 = opensimplex, 3 = simplerandom
 			// conditionals: 0 = eq (equal), 1 = greater, 2 = less, 3 = greatereq, 4 = lesseq, 5 = noteq
+			// npvm 0 = floor 1 = ceil
 			List<String> inList = new ArrayList<>();
 			List<String> outList = new ArrayList<>();
 
@@ -63,6 +65,7 @@ public class NoiseTransformParser {
 				for (int i = 0; i < lineData.length; ++i) {
 					char c = lineData[i];
 					if (readMode == 0) { // header
+						boolean commentFlag = false;
 						if (i == lineData.length - 1) {
 							buffer.append(c);
 							if (buffer.toString().trim().equals("start")) {
@@ -75,7 +78,8 @@ public class NoiseTransformParser {
 						case ' ':
 							String bufferString = buffer.toString().trim();
 							if (bufferString.equals("#")) {
-								continue;
+								commentFlag = true;
+								break;
 							} else if (bufferString.equals("in")) {
 								readMode = 2;
 							} else if (bufferString.equals("out")) {
@@ -87,13 +91,18 @@ public class NoiseTransformParser {
 							buffer.append(c);
 							break;
 						}
+						if (commentFlag) {
+							break;
+						}
 					} else if (readMode == 1) { // main
+						boolean commentFlag = false;
 						switch (c) {
 						case ' ':
 							String bufferString = buffer.toString().trim();
 
 							if (bufferString.equals("#")) {
-								continue;
+								commentFlag = true;
+								break;
 							} else if (bufferString.equals("prepare")) {
 								readMode = 7;
 							} else if (bufferString.equals("load")) {
@@ -111,6 +120,12 @@ public class NoiseTransformParser {
 							} else if (bufferString.equals("mul")) {
 								readMode = 5;
 								readMeta = 3;
+							} else if (bufferString.equals("floor")) {
+								readMode = 10;
+								readMeta = 0;
+							} else if (bufferString.equals("ceil")) {
+								readMode = 10;
+								readMeta = 1;
 							} else if (bufferString.equals("div")) {
 								readMode = 5;
 								readMeta = 4;
@@ -153,34 +168,25 @@ public class NoiseTransformParser {
 							buffer.append(c);
 							break;
 						}
-					} else if (readMode == 2) { // in
-						if (c == ' ') {
-							throw new RuntimeException("Invalid space in input declaration!");
+						if (commentFlag) {
+							break;
 						}
-						buffer.append(c);
-						if (i == lineData.length - 1) {
+					} else if (readMode == 2) { // in
+						if (OutputManager.ifEOLOutput("input declaration", c, i, lineData, buffer)) {
 							String bufferString = buffer.toString().trim();
 							inList.add(bufferString);
 							readMode = 0;
 							buffer = new StringBuilder();
 						}
 					} else if (readMode == 3) { // out
-						if (c == ' ') {
-							throw new RuntimeException("Invalid space in output declaration!");
-						}
-						buffer.append(c);
-						if (i == lineData.length - 1) {
+						if (OutputManager.ifEOLOutput("output declaration", c, i, lineData, buffer)) {
 							String bufferString = buffer.toString().trim();
 							outList.add(bufferString);
 							readMode = 0;
 							buffer = new StringBuilder();
 						}
 					} else if (readMode == 4) { // load
-						if (c == ' ') {
-							throw new RuntimeException("Invalid space in load declaration!");
-						}
-						buffer.append(c);
-						if (i == lineData.length - 1) {
+						if (OutputManager.ifEOLOutput("load declaration", c, i, lineData, buffer)) {
 							String bufferString = buffer.toString().trim();
 							sequence.add((vars, packetFn) -> {
 								vars.readPacket(NoiseTransformers.getTransformer(bufferString).transform(new TransformVarStorage(), packetFn.apply(vars)));
@@ -190,7 +196,6 @@ public class NoiseTransformParser {
 							buffer = new StringBuilder();
 						}
 					} else if (readMode == 5) { // varname
-
 						if (i == lineData.length - 1) {
 							throw new RuntimeException("Invalid end of line in varname declaration for var manipulation!");
 						} else if (c == ' ') {
@@ -202,11 +207,7 @@ public class NoiseTransformParser {
 							buffer.append(c);
 						}
 					} else if (readMode == 6) { // var manipulation
-						if (c == ' ') {
-							throw new RuntimeException("Invalid space in var manipulation!");
-						}
-						buffer.append(c);
-						if (i == lineData.length - 1) {
+						if (OutputManager.ifEOLOutput("var manipulation", c, i, lineData, buffer)) {
 							String bufferString = buffer.toString().trim();
 
 							try {
@@ -245,22 +246,14 @@ public class NoiseTransformParser {
 							buffer = new StringBuilder();
 						}
 					} else if (readMode == 7) { // prepare
-						if (c == ' ') {
-							throw new RuntimeException("Invalid space in prepare declaration!");
-						}
-						buffer.append(c);
-						if (i == lineData.length - 1) {
+						if (OutputManager.ifEOLOutput("prepare declaration", c, i, lineData, buffer)) {
 							String bufferString = buffer.toString().trim();
 							sequence.add((vars, packetFunc) -> prepared.add(bufferString));
 							readMode = 1;
 							buffer = new StringBuilder();
 						}
 					} else if (readMode == 8) { // gennoise
-						if (c == ' ') {
-							throw new RuntimeException("Invalid space in gennoise<?> declaration!");
-						}
-						buffer.append(c);
-						if (i == lineData.length - 1) {
+						if (OutputManager.ifEOLOutput("gennoise<?> declaration", c, i, lineData, buffer)) {
 							String bufferString = buffer.toString().trim();
 							final NoiseProvider provider = NoiseProvider.of(readMeta);
 							sequence.add((vars, packetFn) -> {
@@ -347,6 +340,25 @@ public class NoiseTransformParser {
 							readMode = 1;
 							buffer = new StringBuilder();
 						}
+					} else if (readMode == 10) { // npvm
+						if (OutputManager.ifEOLOutput("noparam varmanip", c, i, lineData, buffer)) {
+							String bufferString = buffer.toString().trim();
+
+							switch (readMeta) {
+							case 0:
+								sequence.add((vars, packetFn) -> {
+									vars.data.put(bufferString, MathsHelper.floor(vars.data.getOrDefault(bufferString, 0.0D)));
+								});
+								break;
+							case 1:
+								sequence.add((vars, packetFn) -> {
+									vars.data.put(bufferString, MathsHelper.ceil(vars.data.getOrDefault(bufferString, 0.0D)));
+								});
+								break;
+							}
+							readMode = 1;
+							buffer = new StringBuilder();
+						}
 					}
 				}
 			}
@@ -384,11 +396,23 @@ public class NoiseTransformParser {
 
 		int i = 0;
 		for (String outVar : this.prepared) {
-			protoOut[i] = vars.data.get(outVar);
+			
+			if (vars.data.containsKey(outVar)) { // is it a variable?
+				protoOut[i] = vars.data.get(outVar);
+			} else {
+				try { // is it a valid numeric double value?
+					double outVal = Double.valueOf(outVar).doubleValue();
+					
+					protoOut[i] = outVal;
+				} catch (NumberFormatException e) { // error!
+					throw e;
+				}
+			}
+			
 			++i;
 		}
 
-		return new TransformPacket(protoOut, this.out);
+		return new TransformPacket(protoOut, this.prepared.toArray(new String[0]));
 	}
 
 	private TransformPacket createOut(final TransformVarStorage vars) {
@@ -405,5 +429,27 @@ public class NoiseTransformParser {
 
 	public long index() {
 		return index;
+	}
+
+	private static final class OutputManager {
+		private OutputManager() {
+		}
+
+		public static boolean ifEOLOutput(String declaration, char c, int i, char[] lineData, StringBuilder buffer) throws InvalidScriptSyntaxError {
+			if (c == ' ') {
+				throw new InvalidScriptSyntaxError("Invalid space in " + declaration + "!");
+			}
+			buffer.append(c);
+			return (i == lineData.length - 1);
+		}
+	}
+
+	private static class InvalidScriptSyntaxError extends RuntimeException {
+
+		private static final long serialVersionUID = -1618959594663566216L;
+
+		public InvalidScriptSyntaxError(String message) {
+			super(message);
+		}
 	}
 }

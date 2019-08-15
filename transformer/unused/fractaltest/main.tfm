@@ -1,0 +1,49 @@
+# particularly slow fractal thing for testing
+# most programs would generally be simpler than this
+
+in x
+in y
+
+out r
+out g
+out b
+
+start
+set val 0.0
+
+# generate island
+prepare x
+prepare y
+
+load beginfractal
+
+# add randomness to edges. at scales: 16, 8, 4
+
+prepare x
+prepare y
+prepare is
+prepare 16
+load addscaledfractal_a
+
+prepare x
+prepare y
+prepare is
+prepare 8
+load addscaledfractal_b
+
+prepare x
+prepare y
+prepare is
+prepare 4
+load addscaledfractal_c
+
+# default green colour
+set r 0.0
+set g 0.8
+set b 0.0
+
+# set blue vs green
+prepare is
+prepare 0.0
+
+loadif_e blue

@@ -1,0 +1,6 @@
+in v
+out val
+
+start
+set val 1
+sub val v

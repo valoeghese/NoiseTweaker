@@ -1,0 +1,28 @@
+in x
+in y
+
+out is
+
+start
+
+# scale stuff
+
+div x 64
+div y 64
+floor x
+floor y
+
+# generate island
+prepare x
+prepare y
+gennoise noise
+
+# prepare output
+set val 0.0
+
+# 1 in 10 chance to be green
+prepare noise
+prepare 0.1
+loadif_le one
+
+set is val

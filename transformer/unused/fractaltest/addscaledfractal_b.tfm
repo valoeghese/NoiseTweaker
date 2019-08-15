@@ -1,0 +1,74 @@
+in x
+in y
+in centre
+in scale
+
+out is
+
+start
+set invert centre
+# get surrounding stuff
+
+add y scale
+
+prepare x
+prepare y
+prepare centre
+prepare 16
+load addscaledfractal_a
+set north is
+
+sub y scale
+sub y scale
+
+prepare x
+prepare y
+prepare centre
+prepare 16
+load addscaledfractal_a
+set south is
+
+add y scale
+add x scale
+
+prepare x
+prepare y
+prepare centre
+prepare 16
+load addscaledfractal_a
+set east is
+
+sub x scale
+sub x scale
+
+prepare x
+prepare y
+prepare centre
+prepare 16
+load addscaledfractal_a
+set west is
+
+add x scale
+
+# scale x and y
+div x scale
+div y scale
+floor x
+floor y
+
+# add fractal if applicable
+
+prepare x
+prepare y
+prepare north
+prepare east
+prepare south
+prepare west
+load addfractal
+
+# if centre is blue keep result blue
+prepare centre
+prepare 0.0
+loadif_e zero
+
+set is val

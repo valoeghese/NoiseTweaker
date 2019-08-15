@@ -7,18 +7,15 @@ out b
 
 start
 # scale noise
-div x 100.0
-div y 100.0
+div x 130.0
+div y 130.0
 
 # octaves
-set octaves 10
+set octaves 8
 
-# vars
-set sea_level 0.4
-set beach_level sea_level
-add beach_level 0.05
+# generate opensimplex fractal (octave) noise
+# alternatively gennoisde_v is value fractal (octave) noise
 
-# generate opensimplex noise
 prepare x
 prepare y
 prepare octaves
@@ -30,13 +27,22 @@ set g 0.8
 set b 0.0
 
 # set beach vs land
+# 0.45 is beach/land level
 prepare noise
-prepare beach_level
+prepare 0.35
 
 loadif_l sand
 
 # set land vs water
+# 0.4 is sea/beach level
 prepare noise
-prepare sea_level
+prepare 0.3
 
 loadif_l water
+
+# set trench vs sea
+# -0.2 is trench/sea level
+prepare noise
+prepare -0.2
+
+loadif_l deepwater

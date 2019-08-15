@@ -1,0 +1,52 @@
+in x
+in y
+in north
+in east
+in south
+in west
+
+out val
+
+start
+set chance 0.0
+set val 0.0
+
+# check surrounding area for land
+prepare north
+prepare 0.0
+prepare val
+prepare 0.25
+loadif_e add
+
+prepare south
+prepare 0.0
+prepare val
+prepare 0.25
+loadif_e add
+
+prepare east
+prepare 0.0
+prepare val
+prepare 0.25
+loadif_e add
+
+prepare west
+prepare 0.0
+prepare val
+prepare 0.25
+loadif_e add
+
+set chance val
+
+# prepare output
+set val 0.0
+
+# gen random value
+prepare x
+prepare y
+gennoise noise
+
+# <chance> chance to be ocean
+prepare noise
+prepare chance
+loadif_ge one

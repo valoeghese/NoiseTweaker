@@ -1,0 +1,27 @@
+in n
+in e
+in s
+in w
+
+out north
+out east
+out south
+out west
+
+start
+
+prepare n
+load flip
+set north val
+
+prepare e
+load flip
+set east val
+
+prepare s
+load flip
+set south val
+
+prepare w
+load flip
+set west val

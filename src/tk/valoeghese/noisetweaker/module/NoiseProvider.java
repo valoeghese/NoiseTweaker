@@ -2,6 +2,7 @@ package tk.valoeghese.noisetweaker.module;
 
 import java.util.Random;
 
+import tk.valoeghese.noisetweaker.Main;
 import tk.valoeghese.noisetweaker.io.NoiseTransformParser;
 import tk.valoeghese.noisetweaker.noise.INoise2D;
 import tk.valoeghese.noisetweaker.noise.OctaveOpenSimplexNoise;
@@ -37,7 +38,7 @@ public abstract class NoiseProvider {
 			double[] data = packet.getData();
 			
 			int octaves = data.length < 3 ? 8 : (int) (data[2]);
-			INoise2D sampler = parent.VNOISE_CACHE.computeIfAbsent(octaves, octavecount -> new OctaveValueNoise(new Random(parent.index()), false, octavecount));
+			INoise2D sampler = parent.VNOISE_CACHE.computeIfAbsent(octaves, octavecount -> new OctaveValueNoise(new Random(getSeed(parent.index())), false, octavecount));
 			
 			return new double[] {sampler.noise(data[0], data[1])};
 		}
@@ -49,7 +50,7 @@ public abstract class NoiseProvider {
 			double[] data = packet.getData();
 			
 			int octaves = data.length < 3 ? 8 : (int) (data[2]);
-			INoise2D sampler = parent.SGNOISE_CACHE.computeIfAbsent(octaves, octavecount -> new OctaveSimpleGradientNoise(new Random(parent.index()), octavecount));
+			INoise2D sampler = parent.SGNOISE_CACHE.computeIfAbsent(octaves, octavecount -> new OctaveSimpleGradientNoise(new Random(getSeed(parent.index())), octavecount));
 			
 			return new double[] {sampler.noise(data[0], data[1])};
 		}
@@ -61,7 +62,7 @@ public abstract class NoiseProvider {
 			double[] data = packet.getData();
 			
 			int octaves = data.length < 3 ? 8 : (int) (data[2]);
-			INoise2D sampler = parent.OSNOISE_CACHE.computeIfAbsent(octaves, octavecount -> new OctaveOpenSimplexNoise(new Random(parent.index()), octavecount));
+			INoise2D sampler = parent.OSNOISE_CACHE.computeIfAbsent(octaves, octavecount -> new OctaveOpenSimplexNoise(new Random(getSeed(parent.index())), octavecount));
 			
 			return new double[] {sampler.noise(data[0], data[1])};
 		}
@@ -71,9 +72,13 @@ public abstract class NoiseProvider {
 		@Override
 		public double[] sample(NoiseTransformParser parent, TransformPacket packet) {
 			double[] data = packet.getData();
-			return new double[] {new SimpleRandom(parent.index()).randomDouble(data[0], data[1])};
+			return new double[] {new SimpleRandom(getSeed(parent.index())).randomDouble(data[0], data[1])};
 		}
 	};
 
 	public abstract double[] sample(NoiseTransformParser parent, TransformPacket packet);
+	
+	private static final long getSeed(long basicSeed) {
+		return Main.doRandomSeed ? Main.randomSeed + basicSeed : basicSeed;
+	}
 }

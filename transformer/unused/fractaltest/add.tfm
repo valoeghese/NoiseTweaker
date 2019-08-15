@@ -1,0 +1,8 @@
+in n
+in m
+
+out val
+
+start
+set val n
+add val m

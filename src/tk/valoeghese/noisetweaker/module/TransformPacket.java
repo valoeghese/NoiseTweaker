@@ -34,6 +34,10 @@ public class TransformPacket {
 		double[] inData = packet.getData();
 		String[] inNames = packet.getNames();
 		
+		if (inData.length == excluding) {
+			return NULL;
+		}
+		
 		double[] resultData = new double[inData.length - excluding];
 		String[] resultNames = new String[inNames.length - excluding];
 		
@@ -44,4 +48,6 @@ public class TransformPacket {
 		
 		return new TransformPacket(resultData, resultNames);
 	}
+	
+	public static final TransformPacket NULL = new TransformPacket(new double[] {}, new String[] {});
 }
